@@ -31,6 +31,12 @@ reqs() { #; # Install python requirements
   pip install -r requirements.txt
 }
 
+############
+## Deploy ##
+############
+deploy() { #; # Deploy this with pip
+  pip install --upgrade .
+}
 
 #;#######################
 #;# Internal machinery ##
