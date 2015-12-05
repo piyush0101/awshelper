@@ -1,0 +1,10 @@
+#!/Users/ksetzer/Projects/awshelper/venv/bin/python
+# EASY-INSTALL-ENTRY-SCRIPT: 'awshelper==0.1.0','console_scripts','ah'
+__requires__ = 'awshelper==0.1.0'
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.exit(
+        load_entry_point('awshelper==0.1.0', 'console_scripts', 'ah')()
+    )
