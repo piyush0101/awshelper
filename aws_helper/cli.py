@@ -1,34 +1,26 @@
 import click
-import boto
-
+import pprint
+import boto3
 
 @click.group()
-@click.option('--verbose', default=False)
+@click.option('--verbose/--no-verbose', default=False)
 def cli(verbose):
-    click.echo('Verbose mode is %s' % ('on' if debug else 'off'))
+    click.echo('Verbose mode is on') if verbose else ''
 
 @cli.command()
 def stacks():
     click.echo('Stacks!')
+    client = boto3.client('cloudformation')
+    stacks = client.list_stacks( StackStatusFilter=['CREATE_IN_PROGRESS', 'CREATE_FAILED', 'CREATE_COMPLETE', 'ROLLBACK_IN_PROGRESS', 'ROLLBACK_FAILED', 'ROLLBACK_COMPLETE', 'DELETE_IN_PROGRESS', 'DELETE_FAILED', 'DELETE_COMPLETE', 'UPDATE_IN_PROGRESS', 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS', 'UPDATE_COMPLETE', 'UPDATE_ROLLBACK_IN_PROGRESS', 'UPDATE_ROLLBACK_FAILED', 'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS', 'UPDATE_ROLLBACK_COMPLETE' ])
+    pprint.pprint(stacks)
 
 @cli.command()
 def instances():
     click.echo('Instances!')
+    client = boto3.client('ec2')
+    instances = client.describe_instances()
+    pprint.pprint(instances)
 
-#@click.command()
-#def cli():
-#    click.echo('Do the cli')
+if __name__ == '__main__':
+    cli()
 
-#def main():
-#    """AWS command line helpers"""
-#    greet = 'Howdy' if as_cowboy else 'Hello'
-#    click.echo('{0}, {1}.'.format(greet, name))
-
-#@click.command()
-#@click.option('--as-cowboy', '-c', is_flag=True, help='Greet as a cowboy.')
-#@click.argument('name', default='world', required=False)
-
-#def main(name, as_cowboy):
-#    """AWS command line helpers"""
-#    greet = 'Howdy' if as_cowboy else 'Hello'
-#    click.echo('{0}, {1}.'.format(greet, name))

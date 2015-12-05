@@ -1,0 +1,82 @@
+#!/bin/bash
+
+EXEC="$0"
+SCRIPTNAME=${EXEC##*/}
+SELF=${BASH_SOURCE##*/}
+
+#;###########
+#;# Colors ##
+#;###########
+export TERM_RED=$(tput setaf 1)
+export TERM_GREEN=$(tput setaf 2)
+export TERM_ORANGE=$(tput setaf 3)
+export TERM_BLUE=$(tput setaf 4)
+export TERM_PURPLE=$(tput setaf 5)
+export TERM_WHITE=$(tput setaf 7)
+export TERM_BOLD=$(tput bold)
+export TERM_NORM=$(tput op)
+export TERM_RESET=$(tput sgr0)
+
+
+
+#;###########
+#; Aliases ##
+#;###########
+alias foo='bar'
+
+###########
+## Build ##
+###########
+reqs() { #; # Install python requirements
+  pip install -r requirements.txt
+}
+
+
+#;#######################
+#;# Internal machinery ##
+#;#######################
+_doit_list() { # ; # Get list of doits
+  if [ "$1" = "all" ]; then
+    regex='^[a-zA-Z0-9_][a-zA-Z0-9_]*\(\)|^##'
+  else
+    regex='^[a-zA-Z0-9][a-zA-Z0-9_]*\(\)|^##'
+  fi
+  egrep $regex $EXEC \
+    | sed 's/(.[^#]*#//' \
+    | column -t -s ';' \
+    | sed -e "s/^##(/                      /g" \
+    | sed \
+        -e "s/\(\[\)\([^]]*\)\(\]\)/${TERM_ORANGE}\1${TERM_GREEN}\2${TERM_ORANGE}\3${TERM_NORM}/g" \
+        -e "s/^\([a-zA-Z0-9_-]*\)/${TERM_BLUE}\1${TERM_NORM}/" \
+        -e "s/\(<\)\([^>]*\)\(>\)/${TERM_ORANGE}\1${TERM_PURPLE}\2${TERM_ORANGE}\3${TERM_NORM}/g" \
+        -e "s/#/${TERM_BOLD}${TERM_WHITE}|${TERM_RESET}/g"
+}
+
+# Create command completions for doit
+_doit_command_completion() { # ; # Get list of doit commands
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts=$(cat $PROJECTS_HOME/swa_home/bin/doit | egrep '^[a-zA-Z0-9]+[a-zA-Z0-9_]*\(\)' |cut -f1 -d'(')
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+}
+
+complete -F _doit_command_completion doit
+
+# Determine if we were sourced or called as a script.
+# If sourced, restore the profile and display a note
+# If called as a script with no args, display a formatted list of doits
+# If called as a script with --all/-a, display a formatted list of all doits
+# If called as a script with args, run the first arg as a subcommand passing remaining args as parameters
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then   # Running as a script
+  if [[ "$#" == 0 && ( "$SCRIPTNAME" == "doit" || "$SCRIPTNAME" == "doit") ]]; then  # No arguments given
+    _doit_list
+  elif [ "$1" = "-a" -o "$1" = "--all" ]; then # The all arg given, so list sub commands including private
+    _doit_list all
+  else                                         # Run the sub-command with its arguments
+    $@
+  fi
+else                                           # This file was sourced, so configure the environment with doit goodness
+  export DOIT_SOURCED=true
+fi
